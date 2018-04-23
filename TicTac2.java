@@ -1,3 +1,7 @@
+package com.tictactoe.mynewproject;
+
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
@@ -8,6 +12,7 @@ import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     List<Button> buttons = new ArrayList<Button>();
     Button button[][] = new Button[3][3];
     private int roundCount = 1;
+    Button reset;
 
 
     int winningCombinations[][] = new int[][]{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {6, 4, 2}};
@@ -25,11 +31,32 @@ public class MainActivity extends AppCompatActivity {
     TextView textView;
     String x = "X";
     String o = "O";
+    TextView o_win_count;
+    TextView x_win_count;
+    TextView draw_count;
+    private int k;
+    private int w;
+    private int e;
+    private SharedPreferences mSettings;
+
+    public static final String app = "mySetting";
+
+    public static final String app_counter_x = "counterX";
+    public static final String app_counter_o = "counterO";
+    public static final String app_counter_draw = "counterD";
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mSettings = getSharedPreferences(app, Context.MODE_PRIVATE);
+
+
+
+
 
         button [0][0] = (Button)findViewById(R.id.A1);
         button [0][1] = (Button)findViewById(R.id.A2);
@@ -52,8 +79,29 @@ public class MainActivity extends AppCompatActivity {
         buttons.add((Button) findViewById(R.id.C2));
         buttons.add((Button) findViewById(R.id.C3));
 
+        reset = (Button)findViewById(R.id.reset);
+
 
         textView = (TextView) findViewById(R.id.textView);
+        x_win_count = (TextView)findViewById(R.id.x_win_count);
+        o_win_count = (TextView)findViewById(R.id.o_win_count);
+        draw_count = (TextView)findViewById(R.id.draw_count);
+
+
+        reset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+               k=0;
+                w=0;
+                e=0;
+                x_win_count.setText(Integer.toString(k));
+                o_win_count.setText(Integer.toString(w));
+                draw_count.setText(Integer.toString(e));
+            }
+        });
+
+
 
 
         gameAgain.setOnClickListener(new View.OnClickListener() {
@@ -68,9 +116,13 @@ public class MainActivity extends AppCompatActivity {
 
                     textView.setText("");
                     roundCount = 1;
+
+
                 }
             }
         });
+
+
 
 
         for (Iterator<Button> i = buttons.iterator(); i.hasNext(); ) {
@@ -91,6 +143,39 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SharedPreferences.Editor editor = mSettings.edit();
+
+        editor.putInt(app_counter_x, k);
+        editor.putInt(app_counter_o, e);
+        editor.putInt(app_counter_draw, w);
+        editor.commit();
+
+    }
+
+    @Override
+    protected void onResume () {
+        super.onResume();
+        if (mSettings.contains(app_counter_x)) {
+            if (mSettings.contains(app_counter_o)){
+                if (mSettings.contains(app_counter_draw)) {
+
+
+            k = mSettings.getInt(app_counter_x, 1);
+            e = mSettings.getInt(app_counter_o, 1);
+            w = mSettings.getInt(app_counter_draw, 1);
+            x_win_count.setText( Integer.toString(k));
+            o_win_count.setText(Integer.toString(e));
+            draw_count.setText(Integer.toString(w));
+        }
+ }}}
+
+
 
     private void intellectComputer() {
 
@@ -194,7 +279,6 @@ public class MainActivity extends AppCompatActivity {
         gameFinishedO();
     }
 
-
     public boolean gameFinishedX() {
 
 
@@ -208,6 +292,12 @@ public class MainActivity extends AppCompatActivity {
 
 
                             textView.setText("Winner X");
+
+
+                                x_win_count.setText(Integer.toString( ++k) );
+
+
+
                             for (Iterator<Button> j = buttons.iterator();
                                  j.hasNext(); ) {
                                 final Button Btn = j.next();
@@ -217,11 +307,14 @@ public class MainActivity extends AppCompatActivity {
                             }
                             return true;
                         }
-                    }
+
                 }
-        }
+        }}
         if (roundCount == 5) {
+
             textView.setText("Draw");
+            draw_count.setText(Integer.toString(++w));
+
             return true;
 
         }
@@ -242,6 +335,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                             textView.setText("Winner O");
+                            o_win_count.setText(Integer.toString(++e));
                             for (Iterator<Button> j = buttons.iterator();
                                  j.hasNext(); ) {
                                 final Button Btn = j.next();
@@ -253,10 +347,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         }
-        if (roundCount == 5) {
-            textView.setText("Draw");
-            return true;
-        }
+
         return false;
     }
 
